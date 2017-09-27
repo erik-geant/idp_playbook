@@ -1,0 +1,7 @@
+---
+
+ssp_version: "1.14.14"
+ssp_dist_dirname: "/usr/local/simplesamlphp-{{ ssp_version }}"
+ssp_dist_url: "https://github.com/simplesamlphp/simplesamlphp/releases/download/v{{ ssp_version }}/simplesamlphp-{{ ssp_version }}.tar.gz"
+ssp_dirname: /usr/local/simplesamlphp
+

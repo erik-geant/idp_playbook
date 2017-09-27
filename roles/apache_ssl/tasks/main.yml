@@ -1,0 +1,57 @@
+---
+- name: update apt cache
+  apt:
+    update_cache: yes
+
+- name: create ssl key/cert dir
+  file:
+    path: /etc/apache2/ssl
+    state: directory
+    owner: root
+    group: www-data
+    mode: 0755
+    
+- name: copy server private key
+  copy:
+    src: "{{ https_key }}"
+    dest: /etc/apache2/ssl/server.key
+    owner: root
+    group: www-data
+
+- name: copy server certificate 
+  copy:
+    src: "{{ https_crt }}"
+    dest: /etc/apache2/ssl/server.cert
+    owner: root
+    group: www-data
+
+- name: install apache ssl
+  command: a2enmod ssl
+
+- name: copy installed ssl config
+  command: cp /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-available/000-default-ssl.conf
+
+- name: link an enabled config to available ssl config
+  file:
+    src: /etc/apache2/sites-available/000-default-ssl.conf
+    dest: /etc/apache2/sites-enabled/000-default-ssl.conf
+    owner: root
+    group: www-data
+    state: link
+ 
+- name: update configured private key path
+  replace:
+    dest: /etc/apache2/sites-available/000-default-ssl.conf
+    regexp: '^\s*SSLCertificateKeyFile\s+.*$'
+    replace: "                SSLCertificateKeyFile /etc/apache2/ssl/server.key"
+
+- name: update configured cert path
+  replace:
+    dest: /etc/apache2/sites-available/000-default-ssl.conf
+    regexp: '^\s*SSLCertificateFile\s+.*$'
+    replace: "                SSLCertificateFile /etc/apache2/ssl/server.cert"
+
+- name: restart apache
+  service:
+    name: apache2
+    state: restarted

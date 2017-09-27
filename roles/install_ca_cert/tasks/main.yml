@@ -1,0 +1,15 @@
+---
+- name: install ca-certificates package
+  apt:
+    name: ca-certificates
+    state: installed
+
+- name: install root ca certificate
+  copy:
+    src: "{{ root_ca_crt }}"
+    dest: /usr/local/share/ca-certificates/root_ca.crt
+    owner: root
+    group: root
+  notify:
+    - update_ca_certs
+

@@ -1,0 +1,7 @@
+---
+- hosts: idp
+  roles:
+    - install_ca_cert
+    - geerlingguy.apache
+    - apache_ssl
+    - idp

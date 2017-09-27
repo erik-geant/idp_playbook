@@ -1,0 +1,4 @@
+idp_crt: "saml/idp.crt"
+idp_key: "saml/idp.key"
+https_crt: "https/idp.crt"
+https_key: "https/idp.key"

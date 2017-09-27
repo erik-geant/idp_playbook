@@ -1,0 +1,116 @@
+---
+
+# https://www.helloitsliam.com/2014/12/23/install-configure-and-test-simplesamlphp-for-authentication-testing/
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+
+- name: install php apache module [ubuntu]
+  apt:
+    name: libapache2-mod-php
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+- name: install php5 apache module [debian]
+  apt:
+    name: libapache2-mod-php5
+    state: latest
+#  when: ansible_distribution == "Debian" and ansible_distribution_release == "jessie"
+  when: ansible_distribution == "Debian"
+
+- stat:
+    path: "{{ ssp_dirname }}"
+  register: p
+
+- name: download & unpack go binary distribution
+  unarchive:
+    src: "{{ ssp_dist_url }}"
+    remote_src: true
+    dest: /usr/local
+  when: p.stat.isdir is not defined
+
+- name: rename simplesamlphp dir
+  command: mv {{ ssp_dist_dirname }} {{ ssp_dirname }}
+  args:
+    creates: "{{ ssp_dirname }}"
+
+- name: chown ssp dir
+  file:
+    path: "{{ ssp_dirname }}"
+    owner: root
+    group: www-data
+    state: directory
+    recurse: yes
+
+- name: create /etc/apache2/sites-available/simplesamlphp.conf
+  copy:
+    src: simplesamlphp-apache.conf
+    dest: /etc/apache2/conf-available/simplesamlphp.conf
+    owner: root
+    group: root
+
+- name: add ref to simplesamlphp/apache alias
+  lineinfile:
+    dest: /etc/apache2/sites-available/000-default.conf
+    regexp: simplesamlphp\.conf
+    line: Include conf-available/simplesamlphp.conf
+    insertbefore: '^\s*</VirtualHost>'
+
+- name: update admin password
+  replace:
+    dest: "{{ ssp_dirname }}/config/config.php"
+    regexp: "'auth\\.adminpassword'\\s*=>\\s*'.*'\\s*,"
+    replace: "'auth.adminpassword' => 'admin',"
+
+- name: add ref to simplesamlphp/apache alias
+  lineinfile:
+    dest: /etc/apache2/sites-available/000-default-ssl.conf
+    regexp: simplesamlphp\.conf
+    line: Include conf-available/simplesamlphp.conf
+    insertbefore: '^\s*</VirtualHost>'
+
+- name: install additional simplesamlphp requirements
+  apt:
+    name: memcached
+    state: installed
+
+- name: install additional simplesamlphp requirements [ubuntu]
+  apt: name={{ item }} state=installed
+  with_items:
+    - php-mbstring
+    - php-mcrypt
+    - php-curl
+    - php-ldap
+    - php-xml
+    - php-memcache
+  when: ansible_distribution == "Ubuntu"
+
+- name: install additional simplesamlphp requirements [debian]
+  apt: name={{ item }} state=installed
+  with_items:
+    - php5-cli
+    - php5-mcrypt
+    - php5-curl
+    - php5-ldap
+    - php5-memcache
+  when: ansible_distribution == "Debian"
+
+- name: copy idp cert
+  copy:
+    src: "{{ idp_crt }}"
+    dest: "{{ ssp_dirname }}/cert/server.crt"
+    owner: root
+    group: www-data
+
+- name: copy idp private key
+  copy:
+    src: "{{ idp_key }}"
+    dest: "{{ ssp_dirname }}/cert/server.pem"
+    owner: root
+    group: www-data
+
+- name: restart apache
+  service:
+    name: apache2
+    state: restarted

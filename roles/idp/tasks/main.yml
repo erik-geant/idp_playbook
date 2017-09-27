@@ -1,0 +1,26 @@
+---
+
+- name: enable saml20-idp
+  replace:
+    dest: "{{ ssp_dirname }}/config/config.php"
+    regexp: "'enable\\.saml20-idp'\\s*=>.*,"
+    replace: "'enable.saml20-idp' => true,"
+
+- name: config authsources
+  copy:
+    src: authsources.php
+    dest: "{{ ssp_dirname }}/config/authsources.php"
+    owner: root
+    group: www-data
+
+- name: enable exampleauth
+  file:
+    path: "{{ ssp_dirname }}/modules/exampleauth/enable"
+    state: touch
+    owner: root
+    group: www-data
+
+- name: restart apache
+  service:
+    name: apache2
+    state: restarted
