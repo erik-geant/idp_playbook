@@ -13,7 +13,7 @@ $config = array(
         'discoURL' => null,
     ),
 
-    'example-userpass' => array(
+    'test-users' => array(
         'exampleauth:UserPass',
 
         'myname:hackme' => array(
