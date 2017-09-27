@@ -1,0 +1,5 @@
+.vagrant
+ubuntu*.log
+files/https
+files/ssh
+files/saml
