@@ -6,12 +6,15 @@
     regexp: "'enable\\.saml20-idp'\\s*=>.*,"
     replace: "'enable.saml20-idp' => true,"
 
-- name: config authsources
+- name: copy metadata config files
   copy:
-    src: authsources.php
-    dest: "{{ ssp_dirname }}/config/authsources.php"
+    src: "{{ item.filename }}"
+    dest: "{{ ssp_dirname }}/{{ item.destdir }}/{{ item.filename }}"
     owner: root
     group: www-data
+  with_items:
+    - { filename: "authsources.php", destdir: "config" }
+    - { filename: "saml20-idp-hosted.php", destdir: "metadata" }
 
 - name: enable exampleauth
   file:
